@@ -6,17 +6,22 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Product,Payment
+from .models import Product,Payment,Invoice
 from rest_framework import permissions
 from .serializers import ProductSerializer
 import logging
+
+logger = logging.getLogger("shop.py")
+
 
 stripe.api_key = settings.STRIPE_SECRETE_KEY
 
 # ✅ List Products
 class ProductListAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         products = Product.objects.all()
+        logger.info("user requesting",request.user)
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
     
@@ -121,3 +126,58 @@ def stripe_webhook(request):
                 pass
 
     return HttpResponse(status=200)
+
+
+
+class CreateInvoiceApiView(APIView):
+    permission_classes =  [permissions.IsAuthenticated]
+
+    def post(self,request):
+        payment_id = request.data.get("payment_id")
+        logger.info(payment_id)
+
+
+        try:
+            payment = Payment.objects.get(id = payment_id)
+
+        except Payment.DoesNotExist:
+            return Response({"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        customer = stripe.Customer.create(
+            email=request.user.email,
+            name=request.user.username,
+        )
+        logger.info(payment)
+          # Create Invoice Item
+          # Create the Invoice
+        invoice = stripe.Invoice.create(
+            customer=customer.id,
+            collection_method="send_invoice",  # or 'charge_automatically'
+            days_until_due=7,
+        )
+        stripe.InvoiceItem.create(
+            invoice=invoice.id,
+            customer=customer.id,
+            amount=int(payment.amount),
+            currency='usd',
+            description=f"Invoice for payment {payment.stripe_payment_intent}",
+        )
+
+      
+
+        # Finalize the Invoice
+        finalized = stripe.Invoice.finalize_invoice(invoice.id)
+
+        # Save in DB
+        invoice_obj = Invoice.objects.create(
+            user=request.user,
+            payment=payment,
+            invoice_url=finalized.hosted_invoice_url,
+            invoice_pdf=finalized.invoice_pdf,
+        )
+
+        return Response({
+            "message": "Invoice created successfully",
+            "invoice_url": invoice_obj.invoice_url,
+            "invoice_pdf": invoice_obj.invoice_pdf
+        }, status=status.HTTP_201_CREATED)

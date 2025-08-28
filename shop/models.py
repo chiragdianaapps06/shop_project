@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 from django.db import models
@@ -33,3 +34,11 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment {self.id} - {self.status}"
+
+
+class Invoice(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    payment = models.OneToOneField(Payment, on_delete=models.CASCADE)
+    invoice_url = models.URLField()
+    invoice_pdf = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
