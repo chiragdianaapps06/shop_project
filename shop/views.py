@@ -181,3 +181,31 @@ class CreateInvoiceApiView(APIView):
             "invoice_url": invoice_obj.invoice_url,
             "invoice_pdf": invoice_obj.invoice_pdf
         }, status=status.HTTP_201_CREATED)
+    
+from google import genai
+
+class GoogleChatappView(APIView):
+    def get(self,request):
+        
+
+        client = genai.Client(api_key="AIzaSyBDFwGMNfycHWHzE_T1yu94tKaGVZVJMkA")
+        # prompt = request.data.get('prompt')
+
+        # response = client.models.generate_content(
+        #     model="gemini-2.0-flash", contents={prompt}
+        # )
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",  
+            contents=[
+                {"role": "user", "parts": "Explain bubble sort with example."}
+            ],
+            system_instruction="You are a strict computer science teacher. Always explain step by step, in detail, and provide Python code examples."
+        )
+
+        output_text = ""
+        if hasattr(response, "candidates"):
+            for candidate in response.candidates:
+                for part in candidate.content.parts:
+                    output_text += part.text + "\n"
+        print(output_text) 
+        return Response({"message":"getting data","data":{output_text}},status=status.HTTP_200_OK)
