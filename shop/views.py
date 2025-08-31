@@ -188,7 +188,7 @@ class GoogleChatappView(APIView):
     def get(self,request):
         
 
-        client = genai.Client(api_key="AIzaSyBDFwGMNfycHWHzE_T1yu94tKaGVZVJMkA")
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
         # prompt = request.data.get('prompt')
 
         # response = client.models.generate_content(
