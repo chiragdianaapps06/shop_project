@@ -189,17 +189,17 @@ class GoogleChatappView(APIView):
         
 
         client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        # prompt = request.data.get('prompt')
+        prompt = request.data.get('prompt')
 
-        # response = client.models.generate_content(
-        #     model="gemini-2.0-flash", contents={prompt}
-        # )
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", contents={prompt}
+        )
         response = client.models.generate_content(
             model="gemini-1.5-flash",  
             contents=[
                 {"role": "user", "parts": "Explain bubble sort with example."}
             ],
-            system_instruction="You are a strict computer science teacher. Always explain step by step, in detail, and provide Python code examples."
+            # system_instruction="You are a strict computer science teacher. Always explain step by step, in detail, and provide Python code examples."
         )
 
         output_text = ""
