@@ -1,9 +1,12 @@
 from django.urls import path
-from .views import ProductListAPIView,CreateCheckoutSessionAPIView,SuccessView,CancelView
+from .views import ProductListAPIView,CreateCheckoutSessionAPIView,SuccessView,CancelView,stripe_webhook,CreateInvoiceApiView,GoogleChatappView
 
 urlpatterns = [
     path("products/", ProductListAPIView.as_view(), name="product-list"),
     path("create-checkout-session/", CreateCheckoutSessionAPIView.as_view(), name="checkout-session"),
     path('payment/success/',SuccessView.as_view(),name='payment-successful'),
-    path('payment/cancel/',CancelView.as_view(),name='payment-cancel')
+    path('payment/cancel/',CancelView.as_view(),name='payment-cancel'),
+    path("webhook/", stripe_webhook, name="stripe-webhook"),
+    path('create/invoice/',CreateInvoiceApiView.as_view(),name='create-invoice'),
+    path('chatbot/',GoogleChatappView.as_view(),name='chat-bot'),
 ]
